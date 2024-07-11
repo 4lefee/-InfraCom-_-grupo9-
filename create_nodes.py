@@ -39,8 +39,7 @@ if __name__ == "__main__":
 
     nós = [Node(ip, port) for ip, port in lista_ip_porta]
     for i, nó in enumerate(nós):
-        nó.next_node = nós[(i + 1) % len(nós)]  # Define o próximo nó na lista circularmente
-
+        nó.next_node = nós[(i + 1) % len(nós)]  
         print(f"Nó online: IP={nó.ip}, Porta={nó.port}, Próximo nó: IP={nó.next_node.ip}, Porta={nó.next_node.port}")
 
 
