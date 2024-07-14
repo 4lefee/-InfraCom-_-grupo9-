@@ -4,6 +4,7 @@ import hashlib
 import os
 import time
 from create_nodes import Node
+from finger_table import FingerTable
 
 
 class DHTNode(Node):
@@ -13,6 +14,7 @@ class DHTNode(Node):
         self.data_store = {}
         self.predecessor = None
         self.successor = None
+        self.finger_table = FingerTable(self)
         self.socket.bind((self.ip, self.port))
         self.socket.listen(5)
 
@@ -22,6 +24,7 @@ class DHTNode(Node):
 
     def start(self):
         threading.Thread(target=self.listen).start()
+        threading.Thread(target=self.fix_fingers).start()  # inicializar a atualização periódica da Finger Table
 
     def listen(self):
         print(f'Node {self.ip}:{self.port} listening...')
@@ -81,8 +84,8 @@ class DHTNode(Node):
         responsible_node = self.find_successor(hash_key)
         if responsible_node.id == self.id:
             file_data = connection.recv(file_size)
-            os.makedirs('storage', exist_ok=True)
-            with open(f'storage/{key}', 'wb') as file:
+            os.makedirs('download', exist_ok=True)
+            with open(f'download/{key}', 'wb') as file:
                 file.write(file_data)
             print(f'Node {self.id} stored file {key}')
         else:
@@ -93,7 +96,7 @@ class DHTNode(Node):
         responsible_node = self.find_successor(hash_key)
         if responsible_node.id == self.id:
             try:
-                with open(f'storage/{key}', 'rb') as file:
+                with open(f'download/{key}', 'rb') as file:
                     file_data = file.read()
                 connection.sendall(file_data)
                 print(f'Node {self.id} sent file {key}')
@@ -115,7 +118,7 @@ class DHTNode(Node):
             return self
         if self.id < key <= self.successor.id:
             return self.successor
-        return self
+        return self.finger_table.get_closest_preceding_node(key)
 
     def send_request(self, node, request):
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -124,6 +127,11 @@ class DHTNode(Node):
         response = client.recv(1024).decode()
         client.close()
         return response
+
+    def fix_fingers(self):
+        while True:
+            self.finger_table.update()
+            time.sleep(10)
 
 
 if __name__ == "__main__":
