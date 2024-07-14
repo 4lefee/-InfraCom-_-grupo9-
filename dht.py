@@ -52,12 +52,6 @@ class DHTNode(Node):
             _, key = parts
             value = self.get(key)
             connection.send(value.encode())
-        elif command == 'JOIN':
-            _, ip, port = parts
-            new_node = DHTNode(ip, int(port))
-            self.join(new_node)
-        elif command == 'LEAVE':
-            self.leave()
         elif command == 'PUTFILE':
             _, key, file_size = parts
             self.put_file(connection, key, int(file_size))
