@@ -148,7 +148,6 @@ if __name__ == "__main__":
         if no_file is None:
             print(f"Arquivo '{solicitacao}' não encontrado.")
         else:
-            # Reset the sockets before each file search
             for nó in nós:
                 nó.close()
                 nó.bind_socket()
