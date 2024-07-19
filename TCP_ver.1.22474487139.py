@@ -7,15 +7,17 @@ class Node:
         self.port = port
         self.socket = None
         self.next_node = None
-        self.fila = fila
+        self.fila = fila  # Fila é um termo específico no contexto do código?
         self.arquivo = arquivo
 
     def create_socket(self):
+        """ Cria um novo socket TCP para o nó. """
         if self.socket is not None:
             self.socket.close()
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     def send_file_request(self, servidor):
+        """ Envia uma solicitação de arquivo para o nó servidor. """
         try:
             self.create_socket()
             self.socket.connect(servidor)
@@ -25,6 +27,7 @@ class Node:
             print(f"Erro ao enviar requisição de arquivo: {e}")
 
     def send_file_content(self, conn):
+        """ Envia o conteúdo de um arquivo para o nó conectado. """
         try:
             with open(self.arquivo, 'rb') as file:
                 data = file.read()
@@ -34,6 +37,7 @@ class Node:
             print(f"Erro ao enviar conteúdo do arquivo: {e}")
 
     def receive_file_content(self):
+        """ Recebe o conteúdo de um arquivo de um nó conectado. """
         try:
             conn, addr = self.socket.accept()
             file_content = b""
@@ -49,6 +53,7 @@ class Node:
             return None
 
     def bind_socket(self):
+        """ Liga o socket do nó para aguardar conexões entrantes. """
         try:
             self.create_socket()
             self.socket.bind((self.ip, self.port))
@@ -57,10 +62,12 @@ class Node:
             print(f"Erro ao ligar o socket: {e}")
 
     def close(self):
+        """ Fecha o socket do nó. """
         if self.socket is not None:
             self.socket.close()
 
     def buscar_arquivo(self, no_inicial, no_arquivo, grupo_nos, no_solicitante):
+        """ Busca um arquivo na rede P2P começando pelo nó inicial. """
         if no_inicial == no_arquivo:
             return "O arquivo já está salvo localmente"
 
@@ -84,6 +91,7 @@ class Node:
                 return None
 
     def save_file(self, file_content, no_solicitante):
+        """ Salva o conteúdo de um arquivo recebido em uma pasta específica para o nó. """
         try:
             current_dir = os.getcwd()
             folder_name = f"Node_{no_solicitante + 1}"
@@ -109,10 +117,10 @@ if __name__ == "__main__":
         ("127.0.0.5", 63200, 4, "Jogo.exe")
     ]
 
-    nós = [Node(ip, port, fila, arquivo) for ip, port, fila, arquivo in lista_ip_porta]
+    nos = [Node(ip, port, fila, arquivo) for ip, port, fila, arquivo in lista_ip_porta]
 
-    for i, nó in enumerate(nós):
-        nó.next_node = nós[(i + 1) % len(nós)]
+    for i, no in enumerate(nos):
+        no.next_node = nos[(i + 1) % len(nos)]
 
     itens = [("Hello.txt", 0), ("World.txt", 1), ("Arquivo.py", 2), ("Materias.txt", 3), ("Jogo.exe", 4)]
 
@@ -120,16 +128,16 @@ if __name__ == "__main__":
     for item in itens:
         print(item[0])
 
-    for nó in nós:
-        nó.bind_socket()
+    for no in nos:
+        no.bind_socket()
 
     no_inicial = None
     while no_inicial is None:
         no_inicial_str = input("Qual o nó inicial ? ")
         if no_inicial_str.isdigit():
             no_inicial = int(no_inicial_str) - 1
-            if not (0 <= no_inicial < len(nós)):
-                print(f"Por favor, escolha um número entre 1 e {len(nós)}.")
+            if not (0 <= no_inicial < len(nos)):
+                print(f"Por favor, escolha um número entre 1 e {len(nos)}.")
                 no_inicial = None
         else:
             print("Por favor, digite um número válido.")
@@ -148,15 +156,15 @@ if __name__ == "__main__":
         if no_file is None:
             print(f"Arquivo '{solicitacao}' não encontrado.")
         else:
-            for nó in nós:
-                nó.close()
-                nó.bind_socket()
+            for no in nos:
+                no.close()
+                no.bind_socket()
 
-            file_content = nós[no_inicial].buscar_arquivo(no_inicial, no_file, nós, no_inicial)
+            file_content = nos[no_inicial].buscar_arquivo(no_inicial, no_file, nos, no_inicial)
             if file_content:
                 print(f"Arquivo recebido do nó {no_file + 1}")
             else:
                 print(f"Erro ao buscar arquivo do nó {no_file + 1}")
 
-    for nó in nós:
-        nó.close()
+    for no in nos:
+        no.close()
