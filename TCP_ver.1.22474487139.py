@@ -7,7 +7,7 @@ class Node:
         self.port = port
         self.socket = None
         self.next_node = None
-        self.fila = fila  # Fila é um termo específico no contexto do código?
+        self.fila = fila  
         self.arquivo = arquivo
 
     def create_socket(self):
