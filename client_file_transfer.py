@@ -1,3 +1,4 @@
+# file_transfer.py
 import os
 import time
 from create_nodes import Node
@@ -32,14 +33,37 @@ class FileTransferClient(Node):
         client.close()
         print(f'Arquivo {save_path} recebido de {ip}:{port}')
 
+
 if __name__ == "__main__":
-    cliente = FileTransferClient("127.0.0.1", 8001)
-    destino_ip = "127.0.0.1"
-    destino_port = 8000
-    file_path = "upload/example_file.txt"
-    save_path = "download/downloaded_example_file.txt"
+    lista_ip_porta = [
+        ("127.0.0.1", 8000),
+        ("127.0.0.1", 8001),
+        ("127.0.0.1", 8002),
+        ("127.0.0.1", 8003),
+        ("127.0.0.1", 8004)
+    ]
 
-    cliente.send_file(destino_ip, destino_port, file_path)
-    time.sleep(2)
+    # Criar nós
+    nós = [FileTransferClient(ip, port) for ip, port in lista_ip_porta]
 
-    cliente.receive_file(destino_ip, destino_port, os.path.basename(file_path), save_path)
+    # Arquivos a serem enviados
+    files_to_send = [
+        "upload/file1.txt",
+        "upload/file2.txt",
+        "upload/file3.txt",
+        "upload/file4.txt",
+        "upload/file5.txt"
+    ]
+
+    # Enviar arquivos
+    for i, nó in enumerate(nós):
+        destino_ip, destino_port = nós[(i + 1) % len(nós)].ip, nós[(i + 1) % len(nós)].port
+        nó.send_file(destino_ip, destino_port, files_to_send[i])
+        time.sleep(2)  # Esperar para garantir a conclusão da transferência
+
+    # Receber arquivos
+    for i, nó in enumerate(nós):
+        destino_ip, destino_port = nós[(i + 1) % len(nós)].ip, nós[(i + 1) % len(nós)].port
+        save_path = f"download/downloaded_file{i + 1}.txt"
+        nó.receive_file(destino_ip, destino_port, os.path.basename(files_to_send[i]), save_path)
+        time.sleep(2)  # Esperar para garantir a conclusão da transferência
